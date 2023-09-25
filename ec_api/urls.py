@@ -1,11 +1,12 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.documentation import include_docs_urls
+from rest_framework import routers
 from .import views
 
+route = routers.DefaultRouter()
+route.register(r'tasks', views.TaskView, 'tasks')
+
 urlpatterns = [
-    path('', views.getRoute),
-    path('notes/', views.getNotes),
-    path('notes/<str:pk>/', views.getNote),
-    path('note/create/', views.createNote),
-    path('note/<str:pk>/update/', views.updateNote),
-    path('note/<str:pk>/delete/', views.deleteNote),
+    path('', include(route.urls)),
+    path('docs/', include_docs_urls(title='Tasks API')),
 ]

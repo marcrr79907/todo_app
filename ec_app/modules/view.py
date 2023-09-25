@@ -1,6 +1,8 @@
 import flet as ft
 import requests
 
+base_url = 'http://127.0.0.1:8000/tasks/'
+
 
 class Task(ft.UserControl):
     def __init__(self, task_name, task_status_change, delete_task, id_task):
@@ -60,18 +62,25 @@ class Task(ft.UserControl):
     def edit_task(self, e):
         self.txt_edit_name.value = self.chb_display_task.label
         self.row_display_view.visible = False
+        requests.put(
+            base_url+str(self.id_task)+'/',
+            data={
+                'completed': self.completed,
+                'body': self.txt_edit_name.value
+            }
+        )
         self.row_edit_view.visible = True
         self.update()
 
     def save_task(self, e):
         self.chb_display_task.label = self.txt_edit_name.value
         requests.put(
-            f'http://127.0.0.1:8000/note/{self.id_task}/update/',
+            base_url+str(self.id_task)+'/',
             data={
                 'completed': self.completed,
                 'body': self.txt_edit_name.value
             }
-        ).json()
+        )
         self.row_display_view.visible = True
         self.row_edit_view.visible = False
         self.update()
@@ -82,7 +91,7 @@ class Task(ft.UserControl):
     def status_changed(self, e):
         self.completed = self.chb_display_task.value
         requests.put(
-            f'http://127.0.0.1:8000/note/{self.id_task}/update/',
+            base_url+str(self.id_task)+'/',
             data={
                 'completed': self.completed,
                 'body': self.task_name
@@ -101,7 +110,8 @@ class TodoApp(ft.UserControl):
             icon=ft.icons.ADD, on_click=self.add_task_clicked)
 
         self.col_tasks = ft.Column()
-        self.r = requests.get('http://127.0.0.1:8000/notes/').json()
+        self.r = requests.get(base_url).json()
+        print(len(self.r))
         for i in range(len(self.r)):
             self.col_tasks.controls.append(
                 Task(self.r[i]['body'],
@@ -156,9 +166,9 @@ class TodoApp(ft.UserControl):
 
     def add_task_clicked(self, e):
         task = Task(self.txt_new_task.value,
-                    self.tabs_changed, self.delete_task, self.r[-1]['id']+1)
+                    self.tabs_changed, self.delete_task, len(self.r))
         requests.post(
-            'http://127.0.0.1:8000/note/create/',
+            base_url,
             data={
                 'completed': task.completed,
                 'body': task.task_name
@@ -171,7 +181,7 @@ class TodoApp(ft.UserControl):
         self.update()
 
     def delete_task(self, task: Task):
-        requests.delete(f'http://127.0.0.1:8000/note/{task.id_task}/delete/')
+        requests.delete(base_url+str(task.id_task))
         self.col_tasks.controls.remove(task)
         self.update()
 
